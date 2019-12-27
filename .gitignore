@@ -1,0 +1,4 @@
+build-debug/
+
+*.sublime-project
+*.sublime-workspace
