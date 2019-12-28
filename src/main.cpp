@@ -14,11 +14,18 @@ const char *vertexShaderSource = "#version 450 core\n"
     "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
     "}\0";
 
-const char *fragmentShaderSource = "#version 450 core\n"
+const char *fragmentShaderBlueSource = "#version 450 core\n"
     "out vec4 FragColor;\n"
     "void main()\n"
     "{\n"
-    "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+    "   FragColor = vec4(0.0f, 0.0f, 1.0f, 1.0f);\n"
+    "}\n\0";
+
+const char *fragmentShaderWhiteSource = "#version 450 core\n"
+    "out vec4 FragColor;\n"
+    "void main()\n"
+    "{\n"
+    "   FragColor = vec4(1.0f, 1.0f, 1.0f, 1.0f);\n"
     "}\n\0";
 
 static void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
@@ -71,29 +78,51 @@ int main(int argc, char const *argv[]) {
         std::cerr << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
     }
 
-    int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    glCompileShader(fragmentShader);
+    int fragmentShaderBlue = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentShaderBlue, 1, &fragmentShaderBlueSource, NULL);
+    glCompileShader(fragmentShaderBlue);
     // check for shader compile errors
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
+    glGetShaderiv(fragmentShaderBlue, GL_COMPILE_STATUS, &success);
     if (!success) {
-        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
+        glGetShaderInfoLog(fragmentShaderBlue, 512, NULL, infoLog);
+        std::cerr << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+    }
+
+    int fragmentShaderWhite = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentShaderWhite, 1, &fragmentShaderWhiteSource, NULL);
+    glCompileShader(fragmentShaderWhite);
+    // check for shader compile errors
+    glGetShaderiv(fragmentShaderWhite, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        glGetShaderInfoLog(fragmentShaderWhite, 512, NULL, infoLog);
         std::cerr << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
     }
 
     // link shaders
-    int shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-    // check for linking errors
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+    int shaderProgramBlue = glCreateProgram();
+    glAttachShader(shaderProgramBlue, vertexShader);
+    glAttachShader(shaderProgramBlue, fragmentShaderBlue);
+    glLinkProgram(shaderProgramBlue);
+    glGetProgramiv(shaderProgramBlue, GL_LINK_STATUS, &success);
     if (!success) {
-        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+        glGetProgramInfoLog(shaderProgramBlue, 512, NULL, infoLog);
         std::cerr << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
     }
+
+    int shaderProgramWhite = glCreateProgram();
+    glAttachShader(shaderProgramWhite, vertexShader);
+    glAttachShader(shaderProgramWhite, fragmentShaderWhite);
+    glLinkProgram(shaderProgramWhite);
+    glGetProgramiv(shaderProgramWhite, GL_LINK_STATUS, &success);
+    if (!success) {
+        glGetProgramInfoLog(shaderProgramWhite, 512, NULL, infoLog);
+        std::cerr << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+    }
+
+    // check for linking errors
+    glDeleteShader(fragmentShaderBlue);
+    glDeleteShader(fragmentShaderWhite);
     glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
 
     float firstTriangle[] = {
         -0.9f, -0.5f, 0.0f,  // left
@@ -135,11 +164,13 @@ int main(int argc, char const *argv[]) {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glUseProgram(shaderProgram);
+        glUseProgram(shaderProgramBlue);
         // draw first triangle using the data from the first VAO
         glBindVertexArray(VAOs[0]);
         glDrawArrays(GL_TRIANGLES, 0, 3);
         // then we draw the second triangle using the data from the second VAO
+
+        glUseProgram(shaderProgramWhite);
         glBindVertexArray(VAOs[1]);
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
